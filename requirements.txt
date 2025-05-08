@@ -1,0 +1,10 @@
+psutil
+duckdb
+langchain
+langchain-community
+langchain-core
+langchain-ollama
+streamlit
+python-dotenv
+ollama 
+langchain-ollama
