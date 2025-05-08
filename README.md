@@ -18,13 +18,35 @@ A Python application that uses a Retrieval-Augmented Generation (RAG) approach t
    - Download and install Ollama from [https://ollama.ai/](https://ollama.ai/)
    - Pull the Llama2 model: `ollama pull llama2:7b`
    - Ensure Ollama is running in the background (default: http://localhost:11434)
+3. **Conda** (recommended for environment management)
 
 ## Installation
 
+### Option 1: Using Conda (Recommended)
+
 1. Clone this repository:
    ```
-   git clone <your-repo-url>
-   cd observability_assistant
+   git clone https://github.com/Rhushya/Kloudmate.git
+   cd kloudmate
+   ```
+
+2. Create and activate the Conda environment:
+   ```
+   conda create -n rag_obs_assistant python=3.8
+   conda activate rag_obs_assistant
+   ```
+
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+### Option 2: Using pip
+
+1. Clone this repository:
+   ```
+   git clone https://github.com/Rhushya/Kloudmate.git
+   cd kloudmate
    ```
 
 2. Install dependencies:
@@ -38,20 +60,25 @@ A Python application that uses a Retrieval-Augmented Generation (RAG) approach t
 
 ## Usage
 
-1. **Start the Telemetry Collector**:
+1. **Make sure your environment is activated**:
+   ```
+   conda activate rag_obs_assistant
+   ```
+
+2. **Start the Telemetry Collector**:
    ```
    python telemetry_collector.py
    ```
    This will begin collecting system metrics and storing them in `telemetry.db`.
    Let it run for a few minutes to collect meaningful data.
 
-2. **Start the Streamlit App**:
+3. **Start the Streamlit App**:
    ```
    streamlit run app.py
    ```
    This will open the application in your web browser.
 
-3. **Ask Questions**:
+4. **Ask Questions**:
    - "Which servers had >65% memory usage in the last 24 hours?"
    - "Did any service spike over 85% CPU last week?"
    - "List hosts with >90% disk usage in the past 12 hours"
@@ -102,4 +129,4 @@ observability_assistant/
 
 ## License
 
-MIT 
+MIT
