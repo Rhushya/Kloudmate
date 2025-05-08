@@ -72,6 +72,55 @@ def execute_query(conn, query):
         logger.error(f"Error executing SQL query '{query}': {e}")
         return None, f"Error executing SQL query: {e}"
 
+def show_database():
+    conn = get_db_connection()
+    if conn is None:
+        st.error("Cannot connect to database.")
+        return
+    
+    st.subheader("Database Schema")
+    schema_query = f"DESCRIBE {TABLE_NAME}"
+    schema_results, schema_error = execute_query(conn, schema_query)
+    
+    if schema_error:
+        st.error(f"Error fetching schema: {schema_error}")
+    elif schema_results:
+        st.dataframe(schema_results)
+    
+    st.subheader("Sample Data")
+    sample_query = f"SELECT * FROM {TABLE_NAME} ORDER BY timestamp DESC LIMIT 10"
+    sample_results, sample_error = execute_query(conn, sample_query)
+    
+    if sample_error:
+        st.error(f"Error fetching sample data: {sample_error}")
+    elif sample_results:
+        st.dataframe(sample_results)
+    else:
+        st.info("No data available in the database.")
+    
+    st.subheader("Database Statistics")
+    stats_query = f"SELECT COUNT(*) as total_records FROM {TABLE_NAME}"
+    stats_results, stats_error = execute_query(conn, stats_query)
+    
+    if stats_error:
+        st.error(f"Error fetching statistics: {stats_error}")
+    elif stats_results:
+        st.metric("Total Records", stats_results[0][0])
+        
+    time_range_query = f"SELECT MIN(timestamp) as first_record, MAX(timestamp) as last_record FROM {TABLE_NAME}"
+    time_results, time_error = execute_query(conn, time_range_query)
+    
+    if not time_error and time_results and time_results[0][0] is not None:
+        col1, col2 = st.columns(2)
+        with col1:
+            # Convert datetime to string before passing to metric
+            first_record_str = str(time_results[0][0])
+            st.metric("First Record", first_record_str)
+        with col2:
+            # Convert datetime to string before passing to metric
+            last_record_str = str(time_results[0][1])
+            st.metric("Last Record", last_record_str)
+
 # --- Prompt Templates ---
 # Note: DuckDB uses standard SQL timestamp/interval functions.
 # NOW() or current_timestamp, INTERVAL 'X' UNIT (e.g., INTERVAL '24 hours')
@@ -170,6 +219,9 @@ summarization_chain = (
 # --- Streamlit UI ---
 st.set_page_config(layout="wide", page_title="Observability Assistant")
 st.title("📈 RAG-based Observability Assistant")
+
+st.button("📊 Show Database", on_click=show_database, type="primary")
+
 st.markdown("Ask questions about your system's telemetry data (CPU, Memory, Disk). Ensure `telemetry_collector.py` is running.")
 
 # Initialize session state for conversation history (optional, but good for context)

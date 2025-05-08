@@ -6,20 +6,17 @@ import socket
 import logging
 import os
 
-# --- Configuration ---
 DB_FILE = 'telemetry.db'
 TABLE_NAME = 'system_metrics'
-COLLECTION_INTERVAL_SECONDS = 10  # Collect data every 10 seconds
+COLLECTION_INTERVAL_SECONDS = 10
 HOSTNAME = socket.gethostname()
 
-# --- Logging Setup ---
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     handlers=[logging.StreamHandler()])
 logger = logging.getLogger(__name__)
 
 def create_table_if_not_exists(conn):
-    """Creates the telemetry table if it doesn't exist."""
     try:
         conn.execute(f"""
             CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
@@ -28,7 +25,7 @@ def create_table_if_not_exists(conn):
                 cpu_usage FLOAT,
                 memory_usage FLOAT,
                 disk_usage FLOAT,
-                UNIQUE(timestamp, hostname) -- Ensure unique entries per host at a given timestamp
+                UNIQUE(timestamp, hostname)
             )
         """)
         logger.info(f"Table '{TABLE_NAME}' ensured to exist.")
@@ -37,17 +34,13 @@ def create_table_if_not_exists(conn):
         raise
 
 def get_system_metrics():
-    """Collects system metrics using psutil."""
     cpu = psutil.cpu_percent(interval=1)
     memory = psutil.virtual_memory().percent
-    # Get disk usage for the root directory.
-    # On Windows, this might be 'C:\\'. On Linux/macOS, '/'.
-    # psutil.disk_usage('/') works generally for the primary disk.
     try:
         disk = psutil.disk_usage('/').percent
     except Exception as e:
         logger.warning(f"Could not get disk usage for '/': {e}. Defaulting to 0.")
-        disk = 0.0 # Default or handle specific paths if needed
+        disk = 0.0
 
     return {
         "timestamp": datetime.datetime.now(),
@@ -58,7 +51,6 @@ def get_system_metrics():
     }
 
 def store_metrics(conn, metrics):
-    """Stores the collected metrics into DuckDB."""
     try:
         conn.execute(
             f"INSERT INTO {TABLE_NAME} (timestamp, hostname, cpu_usage, memory_usage, disk_usage) VALUES (?, ?, ?, ?, ?)",
@@ -73,24 +65,19 @@ def store_metrics(conn, metrics):
 
 def main():
     logger.info("Starting telemetry collector...")
-    # Connect to DuckDB. :memory: for in-memory, or a file path for persistence.
-    # Using a file ensures data persists across runs.
     while True:
         conn = None
         try:
-            # Open, write, and close the connection for each cycle to avoid long-term locks
             conn = duckdb.connect(database=DB_FILE, read_only=False)
             create_table_if_not_exists(conn)
             
             metrics = get_system_metrics()
             store_metrics(conn, metrics)
             
-            # Close connection after each write to prevent long-term locks
             conn.close()
             conn = None
             logger.debug("Connection closed after writing metrics")
             
-            # Sleep between collection intervals
             time.sleep(COLLECTION_INTERVAL_SECONDS)
 
         except KeyboardInterrupt:
