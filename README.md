@@ -120,6 +120,10 @@ observability_assistant/
 ├── test_concurrency.py     # Test script for DB concurrency
 └── README.md               # This file
 ```
+##DEMO
+
+https://github.com/user-attachments/assets/6d45c245-1855-49da-93e7-56d4b77ed0aa
+
 
 ## Limitations
 
